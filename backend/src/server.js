@@ -10,10 +10,10 @@ import AppError from './utils/AppError.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// --- CORS Configuration ---
 const allowedOrigins = [
     'http://localhost:5173',
-    // THE FIX IS HERE: Removed the trailing slash from the Vercel URL
-    'https://the-new-job-portal.vercel.app' 
+    'https://the-new-job-portal.vercel.app'
 ];
 
 const corsOptions = {
@@ -27,13 +27,21 @@ const corsOptions = {
 };
 
 // --- Global Middlewares ---
-app.use(cors(corsOptions));
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
+// 1. Apply CORS
+app.use(cors(corsOptions));
+
+// 2. Apply Helmet for security, with a compatible policy
+app.use(helmet({ crossOriginResourcePolicy: false }));
+
+// 3. Use a logger in development
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+// 4. Body Parser - CRITICAL: This must come before your routes
 app.use(express.json({ limit: '10kb' }));
+
 
 // --- Routes ---
 app.get('/', (req, res) => {
@@ -42,11 +50,11 @@ app.get('/', (req, res) => {
 
 app.use('/api/v1', apiV1);
 
+// --- Error Handling ---
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// --- Global Error Handler ---
 app.use(errorHandler);
 
 // --- Start Server ---
