@@ -9,34 +9,39 @@ import AppError from './utils/AppError.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.use(express.json({ limit: '10kb' }));
+
+// --- THE FIX IS HERE: Create a whitelist of allowed domains ---
+const allowedOrigins = [
+    'http://localhost:5173',                // Your local dev frontend
+    'https://the-new-job-portal.vercel.app/' // Your deployed Vercel frontend
+];
 
 const corsOptions = {
-  origin: 'http://localhost:5173',
-  optionsSuccessStatus: 200
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    }
 };
 
 // --- Global Middlewares ---
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // Use the new, more flexible CORS options
 
-// THE FIX IS HERE: We configure helmet to allow cross-origin resources.
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
-);
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 app.use(express.json({ limit: '10kb' }));
 
-// This line serves static files from the 'public' folder
-app.use('/public', express.static('public'));
-
 // --- Routes ---
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Server is healthy' });
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'success', message: 'Job Portal API is live and running!' });
 });
 
 app.use('/api/v1', apiV1);
