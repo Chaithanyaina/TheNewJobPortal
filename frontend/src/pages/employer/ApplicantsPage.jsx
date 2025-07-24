@@ -56,7 +56,7 @@ const ApplicantsPage = () => {
                                             <Download size={16}/> View Resume
                                         </a>
                                     ) : (
-                                        <span className="text-sm text-gray-500">No Resume</span>
+                                        <span className="text-sm text-gray-500">No Resume Provided</span>
                                     )}
                                 </div>
                             </div>

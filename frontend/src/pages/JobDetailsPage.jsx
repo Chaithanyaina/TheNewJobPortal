@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axiosInstance from '../api/axiosInstance'; // Corrected import path
+import { useQuery, useMutation } from '@tanstack/react-query';
+import axiosInstance from '../api/axiosInstance';
 import Spinner from '../components/common/Spinner';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -11,7 +11,6 @@ import { format } from 'date-fns';
 const JobDetailsPage = () => {
     const { id } = useParams();
     const { isAuthenticated, role } = useAuth();
-    const queryClient = useQueryClient();
 
     const { data: job, isLoading } = useQuery({
         queryKey: ['job', id],
@@ -21,10 +20,11 @@ const JobDetailsPage = () => {
 
     const applyMutation = useMutation({
         mutationFn: () => axiosInstance.post(`/jobs/${id}/apply`),
-        onSuccess: (data) => {
+        onSuccess: () => {
             toast.success('Successfully applied for the job!');
-            const updatedJob = data.data.job;
-            queryClient.setQueryData(['job', id], updatedJob);
+            // THE DEFINITIVE FIX: Force a full page reload.
+            // This bypasses all caching issues and guarantees the UI updates.
+            window.location.reload();
         },
         onError: (error) => {
             toast.error(error.response?.data?.message || 'Failed to apply.');

@@ -36,7 +36,7 @@ const EditProfilePage = () => {
                 website: profile.website || '',
             });
         }
-    }, [profile, methods.reset]);
+    }, [profile]);
 
     const mutation = useMutation({
         mutationFn: (formData) => axiosInstance.put('/profiles/me', formData, {

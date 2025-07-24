@@ -22,7 +22,7 @@ const ProfilePage = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-start mb-6">
             <div>
                 <h1 className="text-3xl font-bold text-text-primary">{profile.first_name} {profile.last_name}</h1>
                 <p className="text-lg text-text-secondary flex items-center gap-2 mt-1"><Mail size={16} /> {profile.email}</p>
