@@ -14,11 +14,17 @@ const resumeStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'jobportal/resumes',
-        resource_type: 'image',
-        allowed_formats: ['pdf'],
-        public_id: (req, file) => `resume-${crypto.randomBytes(16).toString('hex')}`,
+        resource_type: 'raw',
+        // This creates a unique public_id that explicitly ends in .pdf.
+        // This ensures Cloudinary and the browser know it's a PDF.
+        public_id: (req, file) => {
+            const randomName = crypto.randomBytes(16).toString('hex');
+            return `resume-${randomName}.pdf`;
+        },
     },
 });
 
-// We only need one simple uploader for a single resume file.
+// A single, simple uploader for a resume file.
 export const uploadResume = multer({ storage: resumeStorage }).single('resume');
+
+// Note: Ensure your auth.routes.js and profile.routes.js are importing and using 'uploadResume'.

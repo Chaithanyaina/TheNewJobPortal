@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axiosInstance from '../api/axiosInstance';
+import axiosInstance from '../api/axiosInstance'; // Corrected import path
 import Spinner from '../components/common/Spinner';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -23,8 +23,6 @@ const JobDetailsPage = () => {
         mutationFn: () => axiosInstance.post(`/jobs/${id}/apply`),
         onSuccess: (data) => {
             toast.success('Successfully applied for the job!');
-            // This is the critical fix: we get the fresh job data back from the API
-            // and use it to instantly update the local cache for this page.
             const updatedJob = data.data.job;
             queryClient.setQueryData(['job', id], updatedJob);
         },
@@ -47,7 +45,6 @@ const JobDetailsPage = () => {
                         <h1 className="text-3xl font-bold text-text-primary">{job.title}</h1>
                         <p className="text-xl text-text-secondary mt-1">{job.companyName}</p>
                     </div>
-                    {/* Placeholder for company logo */}
                 </div>
                 
                 <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-text-secondary border-b pb-6">
@@ -79,5 +76,4 @@ const JobDetailsPage = () => {
         </div>
     );
 };
-
 export default JobDetailsPage;

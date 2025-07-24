@@ -30,13 +30,47 @@ export const Navbar = () => {
 
         <div className="hidden md:flex items-center space-x-6">
           {(!isAuthenticated || user?.role === 'Job Seeker') && (
-            <NavLink to="/jobs" className={({ isActive }) => isActive ? "text-primary font-semibold" : "hover:text-primary"}>Find Jobs</NavLink>
+            <NavLink
+              to="/jobs"
+              className={({ isActive }) =>
+                isActive ? "text-primary font-semibold" : "hover:text-primary"
+              }
+            >
+              Find Jobs
+            </NavLink>
           )}
+
           {isAuthenticated && user?.role === 'Job Seeker' && (
-            <NavLink to="/my-applications" className={({ isActive }) => isActive ? "text-primary font-semibold" : "hover:text-primary"}>My Applications</NavLink>
+            <>
+              <NavLink
+                to="/my-applications"
+                className={({ isActive }) =>
+                  isActive ? "text-primary font-semibold" : "hover:text-primary"
+                }
+              >
+                My Applications
+              </NavLink>
+              {/* ✅ Resume Analyzer Link */}
+              <NavLink
+                to="/tools/resume-analyzer"
+                className={({ isActive }) =>
+                  isActive ? "text-primary font-semibold" : "hover:text-primary"
+                }
+              >
+                Resume Analyzer
+              </NavLink>
+            </>
           )}
+
           {isAuthenticated && user?.role === 'Employer' && (
-            <NavLink to="/employer/dashboard" className={({ isActive }) => isActive ? "text-primary font-semibold" : "hover:text-primary"}>Dashboard</NavLink>
+            <NavLink
+              to="/employer/dashboard"
+              className={({ isActive }) =>
+                isActive ? "text-primary font-semibold" : "hover:text-primary"
+              }
+            >
+              Dashboard
+            </NavLink>
           )}
         </div>
 
@@ -44,12 +78,14 @@ export const Navbar = () => {
           {isAuthenticated && user ? (
             <>
               {user?.role === 'Employer' && (
-                <Link to="/post-job" className="text-sm font-medium bg-primary text-white px-3 py-2 rounded-md hover:bg-primary-dark flex items-center gap-2">
+                <Link
+                  to="/post-job"
+                  className="text-sm font-medium bg-primary text-white px-3 py-2 rounded-md hover:bg-primary-dark flex items-center gap-2"
+                >
                   <PlusCircle size={16} /> Post Job
                 </Link>
               )}
               <Link to="/profile" title="View Profile" className="hover:opacity-80 transition-opacity">
-                {/* ✅ Replaced with fallback avatar */}
                 <AvatarFallback name={user.first_name} />
               </Link>
               <button onClick={handleLogout} title="Logout" className="p-2 rounded-full hover:bg-secondary">
