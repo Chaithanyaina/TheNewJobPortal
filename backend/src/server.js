@@ -10,28 +10,24 @@ import AppError from './utils/AppError.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// --- THE FIX IS HERE: Create a whitelist of allowed domains ---
 const allowedOrigins = [
-    'http://localhost:5173',                // Your local dev frontend
-    'https://the-new-job-portal.vercel.app/' // Your deployed Vercel frontend
+    'http://localhost:5173',
+    // THE FIX IS HERE: Removed the trailing slash from the Vercel URL
+    'https://the-new-job-portal.vercel.app' 
 ];
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
         }
-        return callback(null, true);
     }
 };
 
 // --- Global Middlewares ---
-app.use(cors(corsOptions)); // Use the new, more flexible CORS options
-
+app.use(cors(corsOptions));
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 if (process.env.NODE_ENV === 'development') {
