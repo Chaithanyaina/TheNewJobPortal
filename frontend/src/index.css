@@ -2,5 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-html { scroll-behavior: smooth; }
-body { font-family: 'Inter', sans-serif; background-color: theme('colors.secondary'); color: theme('colors.text-primary'); }
+body {
+  font-family: theme('fontFamily.sans');
+  background-color: theme('colors.background');
+  color: theme('colors.text-primary');
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Add a subtle gradient to the background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, hsla(243, 80%, 62%, 0.05), transparent 30%);
+  z-index: -1;
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const Button = ({
   children,
@@ -9,15 +10,17 @@ const Button = ({
   isLoading = false,
   disabled = false,
 }) => {
-  const baseStyles = 'w-full px-4 py-2.5 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center';
+  const baseStyles = 'w-full px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center shadow-sm';
 
   const variants = {
     primary: 'bg-primary text-white hover:bg-primary-dark focus:ring-primary',
-    secondary: 'bg-secondary text-text-primary hover:bg-gray-300 focus:ring-primary',
+    secondary: 'bg-surface text-text-primary border border-border hover:bg-gray-100 focus:ring-primary',
   };
 
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       type={type}
       onClick={onClick}
       className={`${baseStyles} ${variants[variant]} ${className}`}
@@ -28,7 +31,7 @@ const Button = ({
       ) : (
         children
       )}
-    </button>
+    </motion.button>
   );
 };
 
