@@ -4,8 +4,7 @@ A full-stack, production-grade job portal application built with the PERN stack 
 
 **Live Demo:** [**https://the-new-job-portal.vercel.app/**](https://the-new-job-portal.vercel.app/)
 
-![Job Portal Screenshot](https://i.imgur.com/3QZ3A5w.png) 
-*(**Note:** You can replace this with a screenshot of your own homepage!)*
+![Job Portal Screenshot](C:\Users\chait\Documents\Projects\JobPortalWebsite\image.png) 
 
 ---
 
@@ -59,7 +58,7 @@ To get a local copy up and running, follow these simple steps.
 
 ### 1. Clone the repository
 ```sh
-git clone [https://github.com/your-username/your-repo.git](https://github.com/your-username/your-repo.git)
+git clone [https://github.com/Chaithanyaina/TheNewJobPortal.git](https://github.com/Chaithanyaina/TheNewJobPortal.git)
 cd your-repo
 ```
 
