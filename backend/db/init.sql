@@ -2,7 +2,7 @@
 DROP TABLE IF EXISTS applications, job_seeker_profiles, jobs, companies, users CASCADE;
 DROP TYPE IF EXISTS user_role, application_status, job_type;
 
--- Create custom types
+-- Create custom types (Simplified: 'Screening' is removed)
 CREATE TYPE user_role AS ENUM ('Job Seeker', 'Employer', 'Admin');
 CREATE TYPE application_status AS ENUM ('Applied', 'Viewed', 'Interviewing', 'Offered', 'Rejected');
 CREATE TYPE job_type AS ENUM ('Full-time', 'Part-time', 'Contract', 'Internship');
@@ -11,7 +11,7 @@ CREATE TYPE job_type AS ENUM ('Full-time', 'Part-time', 'Contract', 'Internship'
 -- TABLE CREATION (IN CORRECT ORDER)
 ---
 
--- 1. Users table (no dependencies)
+-- 1. Users table (Simplified: no profile_picture_url)
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Companies table (depends on users)
+-- 2. Companies table (Simplified: no logo_url or id_card_url)
 CREATE TABLE companies (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -32,7 +32,7 @@ CREATE TABLE companies (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Jobs table (depends on companies) -- THIS WAS THE MISSING TABLE
+-- 3. Jobs table (Includes salary columns)
 CREATE TABLE jobs (
     id SERIAL PRIMARY KEY,
     company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -42,17 +42,14 @@ CREATE TABLE jobs (
     qualifications TEXT,
     location VARCHAR(255),
     type job_type,
-    -- ADD THESE TWO LINES --
     salary_min NUMERIC(10, 2),
     salary_max NUMERIC(10, 2),
-    -------------------------
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    posted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    tsv tsvector -- Ensure this line is present
+    posted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Job Seeker Profiles table (depends on users)
+-- 4. Job Seeker Profiles table
 CREATE TABLE job_seeker_profiles (
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     headline VARCHAR(255),
@@ -62,26 +59,24 @@ CREATE TABLE job_seeker_profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Applications table (depends on users and jobs)
+-- 5. Applications table
 CREATE TABLE applications (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
     status application_status DEFAULT 'Applied',
     applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, job_id) -- A user can only apply to a job once
+    UNIQUE(user_id, job_id)
 );
 
 ---
 -- INDEXES AND TRIGGERS
 ---
 
--- Create indexes for faster queries
 CREATE INDEX idx_jobs_company_id ON jobs(company_id);
 CREATE INDEX idx_applications_user_id ON applications(user_id);
 CREATE INDEX idx_applications_job_id ON applications(job_id);
 
--- Enable full-text search on jobs
 ALTER TABLE jobs ADD COLUMN tsv tsvector;
 
 CREATE OR REPLACE FUNCTION update_jobs_tsv()
