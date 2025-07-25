@@ -42,9 +42,14 @@ CREATE TABLE jobs (
     qualifications TEXT,
     location VARCHAR(255),
     type job_type,
+    -- ADD THESE TWO LINES --
+    salary_min NUMERIC(10, 2),
+    salary_max NUMERIC(10, 2),
+    -------------------------
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    posted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    posted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    tsv tsvector -- Ensure this line is present
 );
 
 -- 4. Job Seeker Profiles table (depends on users)

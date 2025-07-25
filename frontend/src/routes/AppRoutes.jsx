@@ -13,6 +13,7 @@ import ApplicantsPage from '../pages/employer/ApplicantsPage';
 import ProtectedRoute from './ProtectedRoute';
 import NotFoundPage from '../pages/NotFoundPage';
 import ResumeAnalyzerPage from '../pages/ResumeAnalyzerPage'; // <-- IMPORT
+import EditJobPage from '../pages/employer/EditJobPage'; // <-- IMPORT
 
 const AppRoutes = () => (
   <Routes>
@@ -40,7 +41,14 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
-
+<Route 
+    path="/employer/jobs/:id/edit" 
+    element={
+        <ProtectedRoute allowedRoles={['Employer']}>
+            <EditJobPage />
+        </ProtectedRoute>
+    } 
+/>
     <Route
       path="/post-job"
       element={
