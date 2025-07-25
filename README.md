@@ -4,7 +4,7 @@ A full-stack, production-grade job portal application built with the PERN stack 
 
 **Live Demo:** [**https://the-new-job-portal.vercel.app/**](https://the-new-job-portal.vercel.app/)
 
-![Job Portal Screenshot](C:\Users\chait\Documents\Projects\JobPortalWebsite\image.png) 
+![Job Portal Screenshot](https://github.com/Chaithanyaina/TheNewJobPortal/blob/main/image.png?raw=true) 
 
 ---
 
