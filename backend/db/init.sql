@@ -2,16 +2,16 @@
 DROP TABLE IF EXISTS applications, job_seeker_profiles, jobs, companies, users CASCADE;
 DROP TYPE IF EXISTS user_role, application_status, job_type;
 
--- Create custom types (Simplified: 'Screening' is removed)
+-- Create custom types (Includes 'Screening' for the AI feature)
 CREATE TYPE user_role AS ENUM ('Job Seeker', 'Employer', 'Admin');
-CREATE TYPE application_status AS ENUM ('Applied', 'Viewed', 'Interviewing', 'Offered', 'Rejected');
+CREATE TYPE application_status AS ENUM ('Screening', 'Applied', 'Viewed', 'Interviewing', 'Offered', 'Rejected');
 CREATE TYPE job_type AS ENUM ('Full-time', 'Part-time', 'Contract', 'Internship');
 
 ---
 -- TABLE CREATION (IN CORRECT ORDER)
 ---
 
--- 1. Users table (Simplified: no profile_picture_url)
+-- 1. Users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Companies table (Simplified: no logo_url or id_card_url)
+-- 2. Companies table
 CREATE TABLE companies (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -32,7 +32,7 @@ CREATE TABLE companies (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Jobs table (Includes salary columns)
+-- 3. Jobs table
 CREATE TABLE jobs (
     id SERIAL PRIMARY KEY,
     company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -46,7 +46,8 @@ CREATE TABLE jobs (
     salary_max NUMERIC(10, 2),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    posted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    posted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    tsv tsvector
 );
 
 -- 4. Job Seeker Profiles table
@@ -76,8 +77,6 @@ CREATE TABLE applications (
 CREATE INDEX idx_jobs_company_id ON jobs(company_id);
 CREATE INDEX idx_applications_user_id ON applications(user_id);
 CREATE INDEX idx_applications_job_id ON applications(job_id);
-
-ALTER TABLE jobs ADD COLUMN tsv tsvector;
 
 CREATE OR REPLACE FUNCTION update_jobs_tsv()
 RETURNS TRIGGER AS $$

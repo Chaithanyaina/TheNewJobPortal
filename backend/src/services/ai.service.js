@@ -1,43 +1,69 @@
 import 'dotenv/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios from 'axios';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// This is our new, more intelligent prompt.
-// It instructs the AI on how to behave differently if a user query is provided.
-const resumeAnalysisPrompt = `
-You are an expert technical recruiter and career coach with 20 years of experience.
-Your task is to analyze the following resume text.
+// This is the new, robust function for scoring a resume PDF against a job description.
+// It uses the Gemini Vision model, which is designed for file analysis.
+export const scoreResumePdfWithGemini = async (resumeUrl, jobDescription) => {
+    try {
+        console.log("Downloading resume from:", resumeUrl);
+        const response = await axios.get(resumeUrl, {
+            responseType: 'arraybuffer',
+        });
 
-**Analysis Context:**
-{{ANALYSIS_CONTEXT}}
+        const base64Resume = Buffer.from(response.data).toString('base64');
 
-**Instructions:**
-Return your feedback ONLY as a valid JSON object. Do not include any text or markdown before or after the JSON.
-The JSON object must have these three properties:
-1.  "strengths": An array of 3 to 5 strings, highlighting what the resume does well in relation to the provided context.
-2.  "weaknesses": An array of 3 to 5 strings, identifying areas for improvement based on the context.
-3.  "suggestions": An array of 3 to 5 strings, offering concrete, actionable advice to better align the resume with the context.
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-Here is the resume text to analyze:
+        const prompt = `
+You are an AI-powered Applicant Tracking System (ATS).
+
+Your job is to check how well the attached resume matches the job description below.
+
+If the resume is relevant to the role, give it a higher score.
+
+If it’s unrelated, give it a low score.
+
+Example Response: {"score": 85}
+
+
+Job Description:
 ---
-{{RESUME_TEXT}}
----
-`;
+${jobDescription}
+---`;
 
+        const filePart = {
+            inlineData: {
+                data: base64Resume,
+                mimeType: 'application/pdf',
+            },
+        };
+
+        const result = await model.generateContent([ { text: prompt }, filePart ]);
+        const text = await result.response.text();
+        const json = JSON.parse(text.replace(/```json|```/g, '').trim());
+        return json.score;
+
+    } catch (err) {
+        console.error('AI Screening failed:', err);
+        return 0;
+    }
+};
+
+/**
+ * Function to analyze a resume and give strengths, weaknesses, suggestions.
+ * If a user query (job description or role) is provided, it will tailor the feedback.
+ */
 export const analyzeResumeWithGemini = async (resumeText, userQuery) => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // Dynamically create the context for the prompt.
-        let analysisContext;
-        if (userQuery && userQuery.trim() !== '') {
-            analysisContext = `The user has provided a specific query. Analyze the resume based on this job description or question: "${userQuery}"`;
-        } else {
-            analysisContext = "The user has not provided a specific query. Perform a general analysis of the resume's overall quality, clarity, and impact.";
-        }
+        const analysisContext = userQuery && userQuery.trim() !== ''
+            ? `The user has provided a specific query. Analyze the resume based on this job description or question: "${userQuery}"`
+            : "The user has not provided a specific query. Perform a general analysis of the resume's overall quality, clarity, and impact.";
 
-        // Populate the prompt with the resume text and the context.
         const populatedPrompt = resumeAnalysisPrompt
             .replace('{{ANALYSIS_CONTEXT}}', analysisContext)
             .replace('{{RESUME_TEXT}}', resumeText);

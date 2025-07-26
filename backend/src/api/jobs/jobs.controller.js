@@ -1,7 +1,68 @@
 import db from '../../config/db.js';
 import AppError from '../../utils/AppError.js';
 import catchAsync from '../../utils/catchAsync.js';
+import axios from 'axios';
+import PDFParser from "pdf2json";
+import { scoreResumePdfWithGemini } from '../../services/ai.service.js';
 
+const processApplicationScreening = async (applicationId, jobId, seekerId) => {
+    try {
+        console.log(`Starting AI screening for application ID: ${applicationId}`);
+
+        const jobResult = await db.query('SELECT description FROM jobs WHERE id = $1', [jobId]);
+        const profileResult = await db.query('SELECT resume_url FROM job_seeker_profiles WHERE user_id = $1', [seekerId]);
+        const jobDescription = jobResult.rows[0]?.description;
+        const resumeUrl = profileResult.rows[0]?.resume_url;
+
+        if (!jobDescription || !resumeUrl) {
+            throw new Error('Job or resume not found for screening.');
+        }
+
+        const score = await scoreResumePdfWithGemini(resumeUrl, jobDescription);
+        console.log(`AI screening complete for application ID: ${applicationId}. Score: ${score}`);
+
+        const finalStatus = score >= 85 ? 'Applied' : 'Rejected';
+        await db.query('UPDATE applications SET status = $1 WHERE id = $2', [finalStatus, applicationId]);
+        console.log(`Application ID: ${applicationId} status updated to ${finalStatus}`);
+
+    } catch (error) {
+        console.error(`Failed AI screening for application ID: ${applicationId}`, error);
+        await db.query('UPDATE applications SET status = $1 WHERE id = $2', ['Rejected', applicationId]);
+    }
+};
+
+export const applyToJob = catchAsync(async (req, res, next) => {
+    const { id: jobId } = req.params;
+    const seekerId = req.user.id;
+
+    const profileResult = await db.query('SELECT resume_url FROM job_seeker_profiles WHERE user_id = $1', [seekerId]);
+    if (!profileResult.rows[0]?.resume_url) {
+        return next(new AppError('You must have a resume on your profile to apply.', 400));
+    }
+    const existingApplication = await db.query('SELECT id FROM applications WHERE user_id = $1 AND job_id = $2', [seekerId, jobId]);
+    if (existingApplication.rows.length > 0) {
+        return next(new AppError('You have already applied to this job.', 409));
+    }
+
+    const newApplicationResult = await db.query(
+        'INSERT INTO applications (user_id, job_id, status) VALUES ($1, $2, $3) RETURNING id',
+        [seekerId, jobId, 'Screening']
+    );
+    const newApplicationId = newApplicationResult.rows[0].id;
+
+    processApplicationScreening(newApplicationId, jobId, seekerId);
+
+    const jobQuery = `SELECT j.*, c.name AS "companyName" FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.id = $1`;
+    const jobResult = await db.query(jobQuery, [jobId]);
+    const updatedJob = jobResult.rows[0];
+    updatedJob.userHasApplied = true;
+
+    res.status(200).json({ 
+        status: 'success', 
+        message: 'Your application has been submitted and is being screened by our AI.', 
+        data: { job: updatedJob }
+    });
+});
 export const getAllJobs = catchAsync(async (req, res, next) => {
     const { q, location, type, minSalary, page = 1, limit = 9 } = req.query;
 
@@ -93,27 +154,7 @@ export const createJob = catchAsync(async (req, res, next) => {
     res.status(201).json({ status: 'success', data: { job: rows[0] } });
 });
 
-export const applyToJob = catchAsync(async (req, res, next) => {
-    const { id: jobId } = req.params;
-    const seekerId = req.user.id;
-    const profileResult = await db.query('SELECT resume_url FROM job_seeker_profiles WHERE user_id = $1', [seekerId]);
-    if (!profileResult.rows[0]?.resume_url) return next(new AppError('You must upload a resume to your profile before applying.', 400));
-    try {
-        await db.query( 'INSERT INTO applications (user_id, job_id) VALUES ($1, $2)', [seekerId, jobId]);
-    } catch (err) {
-        if (err.code === '23505') return next(new AppError('You have already applied to this job.', 409));
-        throw err;
-    }
-    const jobQuery = `SELECT j.*, c.name AS "companyName" FROM jobs j JOIN companies c ON j.company_id = c.id WHERE j.id = $1`;
-    const jobResult = await db.query(jobQuery, [jobId]);
-    const updatedJob = jobResult.rows[0];
-    updatedJob.userHasApplied = true;
-    res.status(201).json({ 
-        status: 'success', 
-        message: 'Application submitted successfully!', 
-        data: { job: updatedJob }
-    });
-});
+
 
 
 // --- NEW FUNCTION: To update a job posting ---
