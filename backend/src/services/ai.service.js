@@ -3,6 +3,33 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import axios from 'axios';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// ai.service.js
+
+const resumeAnalysisPrompt = `
+You are a career advisor and expert ATS evaluator.
+
+{{ANALYSIS_CONTEXT}}
+
+Analyze the resume text below:
+
+---
+{{RESUME_TEXT}}
+---
+
+Tasks:
+1. List strengths
+2. List weaknesses
+3. Suggest improvements
+4. Give a matchScore if applicable
+
+Respond only in JSON:
+{
+  "strengths": ["..."],
+  "weaknesses": ["..."],
+  "suggestions": ["..."],
+  "matchScore": 0
+}
+`;
 
 // This is the new, robust function for scoring a resume PDF against a job description.
 // It uses the Gemini Vision model, which is designed for file analysis.
